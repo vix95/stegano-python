@@ -1,5 +1,4 @@
 import sys
-import binascii
 import re
 
 
@@ -19,9 +18,12 @@ def e1():
         else:
             watermark.append(elem)
 
-    with open('watermark.html', 'w') as file:
-        for elem in watermark:
-            file.write(elem + '\n')
+    if i >= len(mess_bit):
+        with open('watermark.html', 'w') as file:
+            for elem in watermark:
+                file.write(elem + '\n')
+    else:
+        print('Cannot hide mess')
 
 
 def d1():
@@ -96,9 +98,12 @@ def e2():
 
         watermark.append(line)
 
-    with open('watermark.html', 'w') as file:
-        for elem in watermark:
-            file.write(elem + '\n')
+    if i >= len(mess_bit):
+        with open('watermark.html', 'w') as file:
+            for elem in watermark:
+                file.write(elem + '\n')
+    else:
+        print('Cannot hide mess')
 
 
 def d2():
@@ -178,9 +183,12 @@ def e3():
 
         watermark.append(line)
 
-    with open('watermark.html', 'w') as file:
-        for elem in watermark:
-            file.write(elem + '\n')
+    if i >= len(mess_bit):
+        with open('watermark.html', 'w') as file:
+            for elem in watermark:
+                file.write(elem + '\n')
+    else:
+        print('Cannot hide mess')
 
 
 def d3():
@@ -213,38 +221,88 @@ def e4():
 
     i = 0
     for x in cover:
+        tag_open = False
+        p = False
+        slash = False
+        hide = False
         line = ""
-        x_format = x
 
-        if i < len(mess_bit):
-            p_open = x_format.find('<p>')
-            p_close = x_format.find('</p>')
-
-            while p_open != -1 and p_close != -1:
+        for c in x:
+            if c == '<':
+                tag_open = True
+            elif c == 'p':
+                p = True
+            elif c == '/':
+                slash = True
+            elif c == '>':
                 if i < len(mess_bit):
-                    if int(mess_bit[i]) == 0 and p_close < p_open:
-                        line += '</p><p></p>'
-                        i += 1
-                    elif int(mess_bit[i]) == 1 and p_open < p_close:
-                        line += '<p></p><p>'
-                        i += 1
+                    if int(mess_bit[i]) == 0 and tag_open and p and slash:
+                        hide = True
+                    elif int(mess_bit[i]) == 1 and tag_open and p and not slash:
+                        hide = True
+            else:
+                tag_open = False
+                p = False
+                slash = False
 
-                    if p_close < p_open:
-                        x_format = x[p_close + 4:]
-                    elif p_open < p_close:
-                        x_format = x[p_open + 3:]
+            line += c
+            if hide:
+                if int(mess_bit[i]) == 0 and tag_open and p and slash:
+                    line += '<p></p>'
+                elif int(mess_bit[i]) == 1 and tag_open and p and not slash:
+                    line += '</p><p>'
 
-                    p_open = x_format.find('<p>')
-                    p_close = x_format.find('</p>')
-        else:
-            line = x
+                i += 1
+                tag_open = False
+                p = False
+                slash = False
+                hide = False
 
-        print(line)
+        watermark.append(line)
 
-    watermark.append(line)
-    with open('watermark.html', 'w') as file:
-        for elem in watermark:
-            file.write(elem + '\n')
+    if i >= len(mess_bit):
+        with open('watermark.html', 'w') as file:
+            for elem in watermark:
+                file.write(elem + '\n')
+    else:
+        print('Cannot hide mess')
+
+
+def d4():
+    watermark = [line.rstrip('\n') for line in open('watermark.html')]
+    detect = []
+
+    for elem in watermark:
+        s = elem
+        p_0 = s.find('</p><p></p>')
+        p_1 = s.find('<p></p><p>')
+
+        while p_0 != -1 or p_1 != -1:
+            if p_0 == -1:
+                p_0 = p_1 + 1
+            elif p_1 == -1:
+                p_1 = p_0 + 1
+
+            if p_0 < p_1 and p_0 != -1:
+                detect.append(0)
+                s = s[p_0 + 11:]
+            elif p_1 < p_0 and p_1 != -1:
+                detect.append(1)
+                s = s[p_1 + 10:]
+
+            p_0 = s.find('</p><p></p>')
+            p_1 = s.find('<p></p><p>')
+
+    detect_str = "".join(list(map(str, detect)))
+    split_detect = ['0b' + detect_str[i:i + 8] for i in range(0, len(detect_str), 8)]
+    ascii_detect = []
+    for x in split_detect:
+        if len(x) == 10 and x != '0b00000000':
+            n = int(x, 2)
+            ascii_detect.append(n.to_bytes((n.bit_length() + 7) // 8, 'big').decode())
+
+    with open('detect.txt', 'w') as file:
+        file.write("".join(ascii_detect))
 
 
 if __name__ == '__main__':
@@ -269,5 +327,7 @@ if __name__ == '__main__':
             d2()
         elif sys.argv[2] == '-3':
             d3()
+        elif sys.argv[2] == '-4':
+            d4()
 
     print("Done for args: {} {}".format(sys.argv[1], sys.argv[2]))
