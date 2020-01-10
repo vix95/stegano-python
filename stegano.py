@@ -213,36 +213,22 @@ def e4():
 
     i = 0
     for x in cover:
-        tag_open = False
-        p = False
         line = ""
 
         if i < len(mess_bit):
-            if int(mess_bit[i]) == 0:
-            elif int(mess_bit[i]) == 1:
-        else:
-            watermark.append(x)
+            for y in range(0, len(x) - 4):
+                s = x[y:y + 4]
+                line += x[y:y + 1]
 
-        for c in x:
-            if c == '<':
-                tag_open = True
-            elif c == 'p':
-                p = True
-            elif c == '>' and tag_open and p:
                 if i < len(mess_bit):
-                    if int(mess_bit[i]) == 0:
-                        line += ' style="margin-botom: 0cm;" '
-                    elif int(mess_bit[i]) == 1:
-                        line += ' style="lineheight: 0cm;" '
+                    if int(mess_bit[i]) == 0 and '</p>' in s:
+                        line += '<p></p>'
+                    elif int(mess_bit[i]) == 1 and '<p>' in s:
+                        line += '</p><p>'
 
-                    i += 1
-                    tag_open = False
-                    p = False
-            else:
-                tag_open = False
-                p = False
-
-            line += c
+            line += x[-4:]
+        else:
+            line = x
 
         watermark.append(line)
 
