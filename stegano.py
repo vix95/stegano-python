@@ -214,24 +214,34 @@ def e4():
     i = 0
     for x in cover:
         line = ""
+        x_format = x
 
         if i < len(mess_bit):
-            for y in range(0, len(x) - 4):
-                s = x[y:y + 4]
-                line += x[y:y + 1]
+            p_open = x_format.find('<p>')
+            p_close = x_format.find('</p>')
 
+            while p_open != -1 and p_close != -1:
                 if i < len(mess_bit):
-                    if int(mess_bit[i]) == 0 and '</p>' in s:
-                        line += '<p></p>'
-                    elif int(mess_bit[i]) == 1 and '<p>' in s:
-                        line += '</p><p>'
+                    if int(mess_bit[i]) == 0 and p_close < p_open:
+                        line += '</p><p></p>'
+                        i += 1
+                    elif int(mess_bit[i]) == 1 and p_open < p_close:
+                        line += '<p></p><p>'
+                        i += 1
 
-            line += x[-4:]
+                    if p_close < p_open:
+                        x_format = x[p_close + 4:]
+                    elif p_open < p_close:
+                        x_format = x[p_open + 3:]
+
+                    p_open = x_format.find('<p>')
+                    p_close = x_format.find('</p>')
         else:
             line = x
 
-        watermark.append(line)
+        print(line)
 
+    watermark.append(line)
     with open('watermark.html', 'w') as file:
         for elem in watermark:
             file.write(elem + '\n')
