@@ -95,6 +95,7 @@ def e2():
                         mess_hide += q
 
                 line += mess_hide
+                line_format = ''
 
         watermark.append(line)
 
